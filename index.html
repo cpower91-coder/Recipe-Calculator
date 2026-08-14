@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bratt Pan & Flask Batch Equalizer</title>
+<style>
+  :root {
+    --bg: #121826;
+    --card-bg: #1e293b;
+    --card-border: #334155;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-hover: #0284c7;
+    --danger: #f43f5e;
+    --success: #10b981;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    padding: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding-bottom: 60px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+  }
+
+  h1 { font-size: 1.6rem; color: #38bdf8; margin-bottom: 6px; }
+  p.subtitle { color: var(--text-muted); font-size: 0.9rem; }
+
+  .dish-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .dish-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 2px solid var(--card-border);
+    overflow: hidden;
+  }
+
+  .dish-card-header {
+    padding: 12px 16px;
+    color: #fff;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.1rem;
+  }
+
+  .flask-badge {
+    background: rgba(0,0,0,0.3);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .dish-body { padding: 16px; }
+
+  .form-group { margin-bottom: 12px; }
+  label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type="text"], input[type="number"], select, textarea {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--card-border);
+    background: #0f172a;
+    color: #fff;
+    font-size: 0.95rem;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+
+  .component-block {
+    background: #0f172a;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 12px;
+    border-left: 4px solid var(--accent);
+  }
+
+  .component-block.starch { border-left-color: #f59e0b; }
+
+  .component-title {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .component-block.starch .component-title { color: #f59e0b; }
+
+  .btn {
+    background: var(--accent);
+    color: #0f172a;
+    font-weight: bold;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+  }
+  .btn:hover { background: var(--accent-hover); }
+  .btn-danger { background: var(--danger); color: white; }
+  .btn-danger:hover { background: #e11d48; }
+
+  .results-section { margin-top: 30px; }
+
+  .result-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+
+  .result-header {
+    padding: 12px 16px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .result-body { padding: 16px; }
+
+  .pan-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .pan-box {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  .progress-bar-bg {
+    background: #334155;
+    height: 12px;
+    border-radius: 6px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.3s;
+  }
+
+  .ing-list {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+    border-top: 1px solid #334155;
+    padding-top: 8px;
+  }
+  .ing-list li { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .ing-list strong { color: var(--text-main); }
+
+  .flask-color-1 { background-color: #ef4444; border-color: #ef4444; }
+  .flask-color-2 { background-color: #3b82f6; border-color: #3b82f6; }
+  .flask-color-3 { background-color: #10b981; border-color: #10b981; }
+  .flask-color-4 { background-color: #f59e0b; border-color: #f59e0b; }
+  .flask-color-5 { background-color: #8b5cf6; border-color: #8b5cf6; }
+  .flask-color-6 { background-color: #ec4899; border-color: #ec4899; }
+  .flask-color-7 { background-color: #14b8a6; border-color: #14b8a6; }
+  .flask-color-8 { background-color: #f97316; border-color: #f97316; }
+
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍳 Bratt Pan & Flask Batch Balancer</h1>
+  <p class="subtitle">Multi-Dish Production Calculator with Main + Starch Equalization</p>
+</header>
+
+<div id="dishes-container" class="dish-grid"></div>
+
+<div class="action-bar">
+  <button class="btn" onclick="addDish()">+ Add Another Dish</button>
+  <button class="btn" style="background: #10b981; color: white;" onclick="calculateAll()">⚡ Calculate Batch & Equalize Pans</button>
+</div>
+
+<div id="results-container" class="results-section"></div>
+
+<script>
+const FLASK_COLORS = [
+  { name: "Flask 1 - Red", class: "flask-color-1", hex: "#ef4444" },
+  { name: "Flask 2 - Blue", class: "flask-color-2", hex: "#3b82f6" },
+  { name: "Flask 3 - Green", class: "flask-color-3", hex: "#10b981" },
+  { name: "Flask 4 - Amber", class: "flask-color-4", hex: "#f59e0b" },
+  { name: "Flask 5 - Purple", class: "flask-color-5", hex: "#8b5cf6" },
+  { name: "Flask 6 - Pink", class: "flask-color-6", hex: "#ec4899" },
+  { name: "Flask 7 - Teal", class: "flask-color-7", hex: "#14b8a6" },
+  { name: "Flask 8 - Orange", class: "flask-color-8", hex: "#f97316" }
+];
+
+let dishes = [
+  {
+    id: 1,
+    name: "Beef Stroganoff & Rice",
+    portionsNeeded: 2400,
+    flaskIndex: 0,
+    main: {
+      name: "Beef Stroganoff",
+      panCapacity: 90,
+      ingredients: "Beef: 15kg\nStock: 10L\nOnions: 3kg\nSour Cream: 2L"
+    },
+    starch: {
+      name: "Basmati Rice",
+      panCapacity: 120,
+      ingredients: "Rice: 10kg\nWater: 15L\nSalt: 100g"
+    }
+  }
+];
+
+function renderDishes() {
+  const container = document.getElementById('dishes-container');
+  container.innerHTML = '';
+
+  dishes.forEach((dish, index) => {
+    const colorObj = FLASK_COLORS[dish.flaskIndex % FLASK_COLORS.length];
+    
+    const card = document.createElement('div');
+    card.className = 'dish-card';
+    card.innerHTML = `
+      <div class="dish-card-header ${colorObj.class}">
+        <span>Dish #${index + 1}</span>
+        <span class="flask-badge">${colorObj.name}</span>
+      </div>
+      <div class="dish-body">
+        <div class="form-group">
+          <label>Dish / Menu Name</label>
+          <input type="text" value="${dish.name}" oninput="dishes[${index}].name = this.value">
+        </div>
+
+        <div class="form-group">
+          <label>Flask Color Tag</label>
+          <select onchange="dishes[${index}].flaskIndex = parseInt(this.value); renderDishes();">
+            ${FLASK_COLORS.map((c, i) => `<option value="${i}" ${i === dish.flaskIndex ? 'selected' : ''}>${c.name}</option>`).join('')}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Total Portions Needed</label>
+          <input type="number" value="${dish.portionsNeeded}" oninput="dishes[${index}].portionsNeeded = parseFloat(this.value) || 0">
+        </div>
+
+        <div class="component-block">
+          <div class="component-title">🥘 MAIN COMPONENT</div>
+          <div class="form-group">
+            <label>Component Name</label>
+            <input type="text" value="${dish.main.name}" oninput="dishes[${index}].main.name = this.value">
+          </div>
+          <div class="form-group">
+            <label>1 Full Pan Yield (Portions)</label>
+            <input type="number" value="${dish.main.panCapacity}" oninput="dishes[${index}].main.panCapacity = parseFloat(this.value) || 1">
+          </div>
+          <div class="form-group">
+            <label>Base Recipe Per Full Pan (Name: Qty)</label>
+            <textarea rows="4" oninput="dishes[${index}].main.ingredients = this.value">${dish.main.ingredients}</textarea>
+          </div>
+        </div>
+
+        <div class="component-block starch">
+          <div class="component-title">🍚 STARCH / SIDE COMPONENT</div>
+          <div class="form-group">
+            <label>Component Name</label>
+            <input type="text" value="${dish.starch.name}" oninput="dishes[${index}].starch.name = this.value">
+          </div>
+          <div class="form-group">
+            <label>1 Full Pan Yield (Portions)</label>
+            <input type="number" value="${dish.starch.panCapacity}" oninput="dishes[${index}].starch.panCapacity = parseFloat(this.value) || 1">
+          </div>
+          <div class="form-group">
+            <label>Base Recipe Per Full Pan (Name: Qty)</label>
+            <textarea rows="4" oninput="dishes[${index}].starch.ingredients = this.value">${dish.starch.ingredients}</textarea>
+          </div>
+        </div>
+
+        ${dishes.length > 1 ? `<button class="btn btn-danger" style="width:100%; margin-top:12px; padding:8px;" onclick="removeDish(${index})">Remove Dish</button>` : ''}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function addDish() {
+  if (dishes.length >= 8) {
+    alert("Maximum of 8 dishes allowed.");
+    return;
+  }
+  const newId = dishes.length + 1;
+  dishes.push({
+    id: newId,
+    name: `Dish #${newId}`,
+    portionsNeeded: 1000,
+    flaskIndex: dishes.length % 8,
+    main: { name: "Main Dish", panCapacity: 90, ingredients: "Beef: 10kg\nSauce: 5L" },
+    starch: { name: "Starch Side", panCapacity: 100, ingredients: "Rice: 8kg\nWater: 12L" }
+  });
+  renderDishes();
+}
+
+function removeDish(index) {
+  dishes.splice(index, 1);
+  renderDishes();
+}
+
+function parseIngredients(text) {
+  if (!text) return [];
+  const lines = text.split('\n');
+  return lines.map(line => {
+    const parts = line.split(':');
+    if (parts.length === 2) {
+      const name = parts[0].trim();
+      const valMatch = parts[1].trim().match(/^([\d\.]+)\s*(.*)$/);
+      if (valMatch) {
+        return { name, amount: parseFloat(valMatch[1]), unit: valMatch[2] };
+      }
+    }
+    return null;
+  }).filter(item => item !== null);
+}
+
+function calculateComponent(targetPortions, comp) {
+  const exactPans = targetPortions / (comp.panCapacity || 1);
+  const physicalPans = Math.ceil(exactPans) || 1;
+  const fillPercent = ((exactPans / physicalPans) * 100).toFixed(1);
+  const scaleFactor = exactPans / physicalPans;
+  const portionsPerPan = (targetPortions / physicalPans).toFixed(1);
+
+  const baseIngredients = parseIngredients(comp.ingredients);
+  const scaledIngredients = baseIngredients.map(ing => ({
+    name: ing.name,
+    perPan: (ing.amount * scaleFactor).toFixed(2),
+    totalJob: (ing.amount * scaleFactor * physicalPans).toFixed(2),
+    unit: ing.unit
+  }));
+
+  return { exactPans, physicalPans, fillPercent, scaleFactor, portionsPerPan, scaledIngredients };
+}
+
+function calculateAll() {
+  const container = document.getElementById('results-container');
+  container.innerHTML = '<h2 style="margin-bottom:16px; color:#38bdf8;">📋 Daily Production & Pan Equalization Plan</h2>';
+
+  dishes.forEach((dish) => {
+    const colorObj = FLASK_COLORS[dish.flaskIndex % FLASK_COLORS.length];
+    const mainCalc = calculateComponent(dish.portionsNeeded, dish.main);
+    const starchCalc = calculateComponent(dish.portionsNeeded, dish.starch);
+
+    const resCard = document.createElement('div');
+    resCard.className = 'result-card';
+    resCard.innerHTML = `
+      <div class="result-header ${colorObj.class}">
+        <span>${dish.name}</span>
+        <span>🏷️ ${colorObj.name} | Portions: ${dish.portionsNeeded.toLocaleString()}</span>
+      </div>
+      <div class="result-body">
+        <h3 style="color:#38bdf8; margin-bottom:8px;">🥘 Main: ${dish.main.name}</h3>
+        <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:12px;">
+          Pan Yield: ${dish.main.panCapacity} portions | Pans Needed: <strong>${mainCalc.physicalPans}</strong> | Equalized Fill: <strong style="color:#10b981">${mainCalc.fillPercent}% per pan</strong> (${mainCalc.portionsPerPan} portions/pan)
+        </p>
+        <div class="pan-breakdown">${renderPanBoxes(mainCalc, colorObj.hex)}</div>
+
+        <hr style="border:0; border-top:1px solid #334155; margin:20px 0;">
+
+        <h3 style="color:#f59e0b; margin-bottom:8px;">🍚 Starch: ${dish.starch.name}</h3>
+        <p style="font-size:0.9rem; color:#94a3b8; margin-bottom:12px;">
+          Pan Yield: ${dish.starch.panCapacity} portions | Pans Needed: <strong>${starchCalc.physicalPans}</strong> | Equalized Fill: <strong style="color:#10b981">${starchCalc.fillPercent}% per pan</strong> (${starchCalc.portionsPerPan} portions/pan)
+        </p>
+        <div class="pan-breakdown">${renderPanBoxes(starchCalc, "#f59e0b")}</div>
+      </div>
+    `;
+    container.appendChild(resCard);
+  });
+}
+
+function renderPanBoxes(calc, colorHex) {
+  let boxesHtml = '';
+  for (let i = 1; i <= calc.physicalPans; i++) {
+    boxesHtml += `
+      <div class="pan-box">
+        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.9rem;">
+          <span>Pan #${i} of ${calc.physicalPans}</span>
+          <span style="color:${colorHex};">${calc.fillPercent}% Full</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" style="width: ${calc.fillPercent}%; background-color: ${colorHex};"></div>
+        </div>
+        <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:6px;">
+          Pan Cook Load: <strong>${calc.portionsPerPan} portions</strong>
+        </div>
+        <div class="ing-list">
+          <div style="font-weight:bold; margin-bottom:4px; color:#fff;">Ingredients to put in this pan:</div>
+          <ul>
+            ${calc.scaledIngredients.length > 0 ? calc.scaledIngredients.map(ing => `<li><span>${ing.name}</span> <strong>${ing.perPan} ${ing.unit}</strong></li>`).join('') : '<li style="font-style:italic;">No ingredients parsed</li>'}
+          </ul>
+        </div>
+      </div>
+    `;
+  }
+  return boxesHtml;
+}
+
+renderDishes();
+</script>
+</body>
+</html>
