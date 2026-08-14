@@ -14,6 +14,7 @@
     --accent: #38bdf8;
     --accent-hover: #0284c7;
     --success: #10b981;
+    --danger: #ef4444;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
@@ -135,7 +136,18 @@
     margin-top: 15px;
   }
 
-  /* 6 FLASK COLOURS */
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.8rem;
+  }
+
+  /* FLASK COLOUR STYLES */
   .color-blue { background-color: #2563eb; border-color: #2563eb; }
   .color-red { background-color: #dc2626; border-color: #dc2626; }
   .color-orange { background-color: #ea580c; border-color: #ea580c; }
@@ -180,7 +192,7 @@
 
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('daily')">📅 Daily Production Orders</button>
-  <button class="tab-btn" onclick="switchTab('master')">⚙️ Master Dish Library (Save 6 Recipes)</button>
+  <button class="tab-btn" onclick="switchTab('master')">⚙️ Master Dish Library</button>
 </div>
 
 <!-- TAB 1: DAILY ORDERS -->
@@ -196,9 +208,12 @@
 
 <!-- TAB 2: MASTER DISH LIBRARY -->
 <div id="tab-master" class="tab-content">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-    <h2>Master Dishes (Saved Recipes)</h2>
-    <button style="background:#10b981; color:white; border:none; padding:8px 16px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="saveMasterDishes()">💾 Save All Recipes</button>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+    <h2>Master Dishes (Recipe Library)</h2>
+    <div style="display:flex; gap:10px;">
+      <button style="background:#38bdf8; color:#0f172a; border:none; padding:10px 16px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="addMasterDish()">➕ Add New Recipe</button>
+      <button style="background:#10b981; color:white; border:none; padding:10px 16px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="saveMasterDishes()">💾 Save All Recipes</button>
+    </div>
   </div>
   <div id="master-grid" class="dish-grid"></div>
 </div>
@@ -213,7 +228,6 @@ const FLASK_COLORS = [
   { name: "Pink Flask", class: "color-pink", hex: "#db2777" }
 ];
 
-// Default 6 Master Dishes stored in browser memory
 let defaultDishes = [
   { id: 1, name: "Beef Stroganoff & Rice", colorIdx: 0, brattCapacity: 120, mainGastroYield: 40, starchGastroYield: 50, mainIng: "Beef: 12kg\nStock: 8L\nCream: 2L", starchIng: "Rice: 8kg\nWater: 12L" },
   { id: 2, name: "Chicken Curry & Mash", colorIdx: 1, brattCapacity: 100, mainGastroYield: 35, starchGastroYield: 40, mainIng: "Chicken: 10kg\nCurry Sauce: 10L", starchIng: "Potatoes: 15kg\nButter: 1kg" },
@@ -224,7 +238,7 @@ let defaultDishes = [
 ];
 
 let masterDishes = JSON.parse(localStorage.getItem('bratt_master_dishes')) || defaultDishes;
-let dailyFlasksNeeded = [0, 0, 0, 0, 0, 0];
+let dailyFlasksNeeded = masterDishes.map(() => 0);
 
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -246,18 +260,27 @@ function renderMasterGrid() {
   container.innerHTML = '';
 
   masterDishes.forEach((dish, idx) => {
-    const col = FLASK_COLORS[dish.colorIdx];
+    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
     const card = document.createElement('div');
     card.className = 'dish-card';
     card.innerHTML = `
       <div class="dish-card-header ${col.class}">
         <span>Dish #${idx + 1} Recipe</span>
-        <span class="flask-badge">${col.name}</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span class="flask-badge">${col.name}</span>
+          ${masterDishes.length > 1 ? `<button class="btn-danger" onclick="deleteMasterDish(${idx})">🗑️ Delete</button>` : ''}
+        </div>
       </div>
       <div class="dish-body">
         <div class="form-group">
           <label>Dish Name</label>
           <input type="text" value="${dish.name}" oninput="masterDishes[${idx}].name = this.value">
+        </div>
+        <div class="form-group">
+          <label>Flask / Color Tag</label>
+          <select onchange="masterDishes[${idx}].colorIdx = parseInt(this.value); renderMasterGrid();">
+            ${FLASK_COLORS.map((c, i) => `<option value="${i}" ${i === dish.colorIdx ? 'selected' : ''}>${c.name}</option>`).join('')}
+          </select>
         </div>
         <div class="form-group">
           <label>1 Bratt Pan Total Capacity (Portions/Flasks)</label>
@@ -293,6 +316,31 @@ function renderMasterGrid() {
   });
 }
 
+function addMasterDish() {
+  const newId = masterDishes.length + 1;
+  const nextColor = (masterDishes.length) % FLASK_COLORS.length;
+  masterDishes.push({
+    id: newId,
+    name: `New Recipe #${newId}`,
+    colorIdx: nextColor,
+    brattCapacity: 100,
+    mainGastroYield: 35,
+    starchGastroYield: 40,
+    mainIng: "Ingredient A: 10kg\nIngredient B: 5L",
+    starchIng: "Starch A: 8kg\nWater: 12L"
+  });
+  dailyFlasksNeeded.push(0);
+  renderMasterGrid();
+}
+
+function deleteMasterDish(idx) {
+  if (confirm(`Are you sure you want to delete "${masterDishes[idx].name}"?`)) {
+    masterDishes.splice(idx, 1);
+    dailyFlasksNeeded.splice(idx, 1);
+    renderMasterGrid();
+  }
+}
+
 function saveMasterDishes() {
   localStorage.setItem('bratt_master_dishes', JSON.stringify(masterDishes));
   alert('Master Recipes Saved Successfully!');
@@ -303,7 +351,7 @@ function renderDailyInputs() {
   container.innerHTML = '';
 
   masterDishes.forEach((dish, idx) => {
-    const col = FLASK_COLORS[dish.colorIdx];
+    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
     const box = document.createElement('div');
     box.style.background = '#0f172a';
     box.style.padding = '12px';
@@ -315,7 +363,7 @@ function renderDailyInputs() {
       <div style="font-size:0.8rem; color:${col.hex}; margin-bottom:8px; font-weight:bold;">🏷️ ${col.name}</div>
       <div class="form-group">
         <label>Flasks Required Today</label>
-        <input type="number" value="${dailyFlasksNeeded[idx]}" min="0" oninput="dailyFlasksNeeded[${idx}] = parseFloat(this.value)||0">
+        <input type="number" value="${dailyFlasksNeeded[idx] || 0}" min="0" oninput="dailyFlasksNeeded[${idx}] = parseFloat(this.value)||0">
       </div>
     `;
     container.appendChild(box);
@@ -342,11 +390,11 @@ function calculateSchedule() {
   let worked = false;
 
   masterDishes.forEach((dish, idx) => {
-    const flasksNeeded = dailyFlasksNeeded[idx];
+    const flasksNeeded = dailyFlasksNeeded[idx] || 0;
     if (flasksNeeded <= 0) return;
     worked = true;
 
-    const col = FLASK_COLORS[dish.colorIdx];
+    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
     const totalPortions = flasksNeeded;
 
     // Main Calculations
