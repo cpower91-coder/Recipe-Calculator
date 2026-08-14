@@ -3,15 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bratt Pan Batch & Time Calculator</title>
+  <title>Bratt Pan Production Calculator</title>
   <style>
     :root {
-      --primary: #1e3a8a;
-      --primary-hover: #1e40af;
-      --bg: #f8fafc;
+      --primary: #0f5132;
+      --primary-hover: #0b3d26;
+      --bg: #f4f6f8;
       --card-bg: #ffffff;
-      --text: #0f172a;
-      --border: #cbd5e1;
+      --text: #212529;
+      --subtext: #6c757d;
+      --border: #e2e8f0;
+      --accent-bg: #e8f5e9;
     }
 
     * {
@@ -25,45 +27,45 @@
       background-color: var(--bg);
       color: var(--text);
       padding: 20px;
-      max-width: 800px;
+      max-width: 650px;
       margin: 0 auto;
     }
 
     header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     header h1 {
       color: var(--primary);
-      font-size: 1.8rem;
+      font-size: 1.6rem;
+      font-weight: 700;
     }
 
     .card {
       background: var(--card-bg);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       border: 1px solid var(--border);
     }
 
     .card h2 {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       margin-bottom: 16px;
       color: var(--primary);
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 8px;
+      font-weight: 600;
     }
 
-    .grid {
+    .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
     }
 
-    @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr; }
+    @media (max-width: 500px) {
+      .form-grid { grid-template-columns: 1fr; }
     }
 
     .field {
@@ -73,15 +75,22 @@
     }
 
     label {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-weight: 600;
+      color: var(--text);
     }
 
     input {
-      padding: 10px;
+      padding: 10px 12px;
       border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: 1rem;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--primary);
     }
 
     button {
@@ -89,43 +98,74 @@
       color: white;
       border: none;
       padding: 12px;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       width: 100%;
-      margin-top: 10px;
+      margin-top: 14px;
+      transition: background 0.2s;
     }
 
     button:hover {
       background: var(--primary-hover);
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
+    /* Stat Cards Dashboard Layout */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
-    th, td {
+    .stat-box {
+      background: var(--bg);
+      border-radius: 10px;
       padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
+      border: 1px solid var(--border);
+      text-align: center;
     }
 
-    th {
-      background-color: #f1f5f9;
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--subtext);
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
       color: var(--primary);
-      font-weight: 700;
     }
 
-    .highlight-row {
-      font-weight: 700;
-      font-size: 1.1rem;
-      background-color: #eff6ff;
+    .total-banner {
+      background: var(--accent-bg);
+      border: 1px solid #c8e6c9;
+      border-radius: 10px;
+      padding: 14px;
+      text-align: center;
     }
 
-    /* Print-Friendly Rules */
+    .total-banner .stat-label {
+      color: #2e7d32;
+    }
+
+    .total-banner .stat-value {
+      font-size: 1.5rem;
+      color: #1b5e20;
+    }
+
+    .print-btn {
+      background: #334155;
+    }
+
+    .print-btn:hover {
+      background: #1e293b;
+    }
+
+    /* Clean Print-Friendly Overrides */
     @media print {
       button, 
       .no-print, 
@@ -138,17 +178,21 @@
         color: #000000 !important;
         padding: 0;
         margin: 0;
+        max-width: 100% !important;
       }
 
       .card {
         box-shadow: none !important;
         border: 1px solid #000 !important;
-        padding: 12px !important;
-        margin-bottom: 12px !important;
+        padding: 16px !important;
       }
 
-      th {
-        background-color: #e2e8f0 !important;
+      .stat-box, .total-banner {
+        background: none !important;
+        border: 1px solid #aaa !important;
+      }
+
+      .stat-value, .total-banner .stat-value, header h1, .card h2 {
         color: #000 !important;
       }
     }
@@ -157,61 +201,65 @@
 <body>
 
   <header>
-    <h1>Bratt Pan Production Calculator</h1>
+    <h1>Bratt Pan Batch Calculator</h1>
   </header>
 
-  <!-- Input Form -->
+  <!-- Input Card -->
   <div class="card input-card">
     <h2>Batch Settings</h2>
     <form id="calc-form">
-      <div class="grid">
+      <div class="form-grid">
         <div class="field">
-          <label for="pan-capacity">Bratt Pan Max Working Capacity (Liters)</label>
+          <label for="pan-capacity">Bratt Pan Capacity (Liters)</label>
           <input type="number" id="pan-capacity" value="80" min="1" step="0.5" required />
         </div>
         <div class="field">
-          <label for="total-volume">Total Batch Volume Needed (Liters)</label>
+          <label for="total-volume">Total Recipe Volume (Liters)</label>
           <input type="number" id="total-volume" value="250" min="1" step="0.5" required />
         </div>
         <div class="field">
-          <label for="cook-time">Cook Time Per Batch (Minutes)</label>
+          <label for="cook-time">Cook Time / Batch (Mins)</label>
           <input type="number" id="cook-time" value="45" min="1" step="1" required />
         </div>
         <div class="field">
-          <label for="turnaround-time">Turnaround / Washout Time (Minutes)</label>
+          <label for="turnaround-time">Wash & Reload Time (Mins)</label>
           <input type="number" id="turnaround-time" value="15" min="0" step="1" required />
         </div>
       </div>
-      <button type="submit">Calculate Production Run</button>
+      <button type="submit">Recalculate Batch Plan</button>
     </form>
   </div>
 
   <!-- Output Results Card -->
   <div class="card">
-    <h2>Production Plan & Schedule</h2>
-    <table>
-      <tbody>
-        <tr>
-          <th>Required Batches:</th>
-          <td id="res-batches">-</td>
-        </tr>
-        <tr>
-          <th>Volume Per Batch:</th>
-          <td id="res-batch-vol">-</td>
-        </tr>
-        <tr>
-          <th>Time Per Batch (Cook + Turnaround):</th>
-          <td id="res-single-time">-</td>
-        </tr>
-        <tr class="highlight-row">
-          <th>Total Production Time:</th>
-          <td id="res-total-time">-</td>
-        </tr>
-      </tbody>
-    </table>
+    <h2>Production Summary</h2>
+    
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">Total Batches</div>
+        <div class="stat-value" id="res-batches">-</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Volume / Batch</div>
+        <div class="stat-value" id="res-batch-vol">-</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Cycle Time</div>
+        <div class="stat-value" id="res-single-time">-</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Clean & Reloads</div>
+        <div class="stat-value" id="res-turns">-</div>
+      </div>
+    </div>
+
+    <div class="total-banner">
+      <div class="stat-label">ESTIMATED TOTAL PRODUCTION TIME</div>
+      <div class="stat-value" id="res-total-time">-</div>
+    </div>
   </div>
 
-  <button class="no-print" onclick="window.print()" style="background: #334155;">🖨️ Print Batch Sheet</button>
+  <button class="no-print print-btn" onclick="window.print()">🖨️ Print Batch Sheet</button>
 
   <script>
     const form = document.getElementById('calc-form');
@@ -224,24 +272,22 @@
 
       if (panCap <= 0 || totalVol <= 0) return;
 
-      // Calculate number of full/partial batches
       const numBatches = Math.ceil(totalVol / panCap);
       const avgBatchVol = (totalVol / numBatches).toFixed(1);
-
-      // Time calculations
       const singleCycleTime = cookTime + turnTime;
-      // Total time = (all cook times) + (turnaround times between batches, assuming no final turnaround needed)
+      
+      // Total production time = all cook cycles + intermediate wash/reload times
       const totalMinutes = (numBatches * cookTime) + ((numBatches - 1) * turnTime);
 
       const hours = Math.floor(totalMinutes / 60);
       const mins = totalMinutes % 60;
       const timeFormatted = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
 
-      // Display results
-      document.getElementById('res-batches').textContent = `${numBatches} batch${numBatches > 1 ? 'es' : ''}`;
-      document.getElementById('res-batch-vol').textContent = `~${avgBatchVol} Liters / batch`;
-      document.getElementById('res-single-time').textContent = `${singleCycleTime} mins (${cookTime}m cook + ${turnTime}m clean/fill)`;
-      document.getElementById('res-total-time').textContent = `${timeFormatted} (${totalMinutes} mins total)`;
+      document.getElementById('res-batches').textContent = `${numBatches}`;
+      document.getElementById('res-batch-vol').textContent = `${avgBatchVol} L`;
+      document.getElementById('res-single-time').textContent = `${singleCycleTime} mins`;
+      document.getElementById('res-turns').textContent = `${numBatches - 1}`;
+      document.getElementById('res-total-time').textContent = `${timeFormatted} (${totalMinutes}m)`;
     }
 
     form.addEventListener('submit', (e) => {
@@ -249,7 +295,6 @@
       calculate();
     });
 
-    // Run initial calculation on page load
     calculate();
   </script>
 </body>
