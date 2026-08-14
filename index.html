@@ -172,11 +172,12 @@
   .progress-fill { height: 100%; background: var(--accent); }
 
   .ing-list { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; border-top: 1px solid #334155; padding-top: 6px; }
+  .ing-list ul { list-style: none; }
   .ing-list li { display: flex; justify-content: space-between; margin-bottom: 3px; }
 
   @media print {
-    .tabs, .btn, button { display: none !important; }
-    body { background: white; color: black; }
+    .tabs, .btn, button, .no-print { display: none !important; }
+    body { background: white; color: black; padding: 0; }
     .result-card { border: 1px solid #ccc; background: white; color: black; page-break-inside: avoid; }
     .pan-box { border: 1px solid #aaa; background: #fff; color: #000; }
     .ing-list { color: #000; }
@@ -200,7 +201,10 @@
   <div style="background:#1e293b; padding:16px; border-radius:12px; border:1px solid #334155; margin-bottom:20px;">
     <h3 style="color:#38bdf8; margin-bottom:12px;">Enter Today's Flask Orders</h3>
     <div id="daily-inputs" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;"></div>
-    <button class="btn" style="background:#10b981; color:white;" onclick="calculateSchedule()">⚡ Calculate Daily Cook & Prep Plan</button>
+    <div style="display:flex; gap:10px; margin-top:15px;">
+      <button class="btn" style="background:#10b981; color:white; margin-top:0;" onclick="calculateSchedule()">⚡ Calculate Daily Cook & Prep Plan</button>
+      <button class="btn no-print" style="background:#3b82f6; color:white; margin-top:0; width:180px;" onclick="window.print()">🖨️ Print Plan</button>
+    </div>
   </div>
 
   <div id="results-container"></div>
