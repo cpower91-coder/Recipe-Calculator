@@ -199,8 +199,17 @@
 <!-- TAB 1: DAILY ORDERS -->
 <div id="tab-daily" class="tab-content active">
   <div style="background:#1e293b; padding:16px; border-radius:12px; border:1px solid #334155; margin-bottom:20px;">
-    <h3 style="color:#38bdf8; margin-bottom:12px;">Enter Today's Flask Orders</h3>
+    
+    <!-- STEP 1: MENU SELECTOR -->
+    <div class="no-print">
+      <h3 style="color:#38bdf8; margin-bottom:12px;">1. Select Today's Menu</h3>
+      <div id="daily-menu-selector" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:20px; border-bottom: 1px solid #334155; padding-bottom: 20px;"></div>
+    </div>
+
+    <!-- STEP 2: FLASK INPUTS -->
+    <h3 style="color:#38bdf8; margin-bottom:12px;">2. Enter Flask Orders</h3>
     <div id="daily-inputs" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;"></div>
+    
     <div style="display:flex; gap:10px; margin-top:15px;">
       <button class="btn" style="background:#10b981; color:white; margin-top:0;" onclick="calculateSchedule()">⚡ Calculate Daily Cook & Prep Plan</button>
       <button class="btn no-print" style="background:#3b82f6; color:white; margin-top:0; width:180px;" onclick="window.print()">🖨️ Print Plan</button>
@@ -244,6 +253,9 @@ let defaultDishes = [
 let masterDishes = JSON.parse(localStorage.getItem('bratt_master_dishes')) || defaultDishes;
 let dailyFlasksNeeded = masterDishes.map(() => 0);
 
+// Tracks which dishes are checked for today's menu (defaults to all if first time loading)
+let todaySelectedIds = JSON.parse(localStorage.getItem('bratt_today_selected_ids')) || masterDishes.map(d => d.id);
+
 function switchTab(tab) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -251,11 +263,88 @@ function switchTab(tab) {
   if (tab === 'daily') {
     document.querySelectorAll('.tab-btn')[0].classList.add('active');
     document.getElementById('tab-daily').classList.add('active');
+    renderDailyMenuSelector();
     renderDailyInputs();
   } else {
     document.querySelectorAll('.tab-btn')[1].classList.add('active');
     document.getElementById('tab-master').classList.add('active');
     renderMasterGrid();
+  }
+}
+
+// Renders the checkboxes at the top of the daily tab
+function renderDailyMenuSelector() {
+  const container = document.getElementById('daily-menu-selector');
+  container.innerHTML = '';
+  
+  masterDishes.forEach((dish, idx) => {
+    const label = document.createElement('label');
+    label.style.display = 'flex';
+    label.style.alignItems = 'center';
+    label.style.gap = '8px';
+    label.style.background = '#0f172a';
+    label.style.padding = '10px 14px';
+    label.style.borderRadius = '6px';
+    label.style.cursor = 'pointer';
+    label.style.fontSize = '0.9rem';
+    label.style.border = '1px solid #334155';
+    label.style.userSelect = 'none';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = todaySelectedIds.includes(dish.id);
+    
+    cb.onchange = (e) => {
+      if (e.target.checked) {
+        todaySelectedIds.push(dish.id);
+      } else {
+        // Remove from selected array and reset its flask count to 0
+        todaySelectedIds = todaySelectedIds.filter(id => id !== dish.id);
+        dailyFlasksNeeded[idx] = 0; 
+      }
+      // Save selection memory
+      localStorage.setItem('bratt_today_selected_ids', JSON.stringify(todaySelectedIds));
+      renderDailyInputs();
+    };
+
+    label.appendChild(cb);
+    label.appendChild(document.createTextNode(dish.name));
+    container.appendChild(label);
+  });
+}
+
+// Renders only the input boxes for dishes that are checked
+function renderDailyInputs() {
+  const container = document.getElementById('daily-inputs');
+  container.innerHTML = '';
+
+  let hasSelected = false;
+
+  masterDishes.forEach((dish, idx) => {
+    // Skip if not checked
+    if (!todaySelectedIds.includes(dish.id)) return;
+    
+    hasSelected = true;
+    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
+    const box = document.createElement('div');
+    box.style.background = '#0f172a';
+    box.style.padding = '12px';
+    box.style.borderRadius = '8px';
+    box.style.borderLeft = `6px solid ${col.hex}`;
+    
+    box.innerHTML = `
+      <div style="font-weight:bold; margin-bottom:4px; color:#fff;">${dish.name}</div>
+      <div style="font-size:0.8rem; color:${col.hex}; margin-bottom:8px; font-weight:bold;">🏷️ ${col.name}</div>
+      <div class="form-group">
+        <label>Flasks Required Today</label>
+        <input type="number" value="${dailyFlasksNeeded[idx] || 0}" min="0" oninput="dailyFlasksNeeded[${idx}] = parseFloat(this.value)||0">
+      </div>
+    `;
+    container.appendChild(box);
+  });
+
+  if (!hasSelected) {
+    container.innerHTML = '<div style="color:#94a3b8; font-size:0.95rem; grid-column: 1 / -1; padding: 10px 0;">⬆️ Please select at least one dish from the menu above.</div>';
   }
 }
 
@@ -321,11 +410,11 @@ function renderMasterGrid() {
 }
 
 function addMasterDish() {
-  const newId = masterDishes.length + 1;
+  const newId = Date.now(); // guarantees a unique ID
   const nextColor = (masterDishes.length) % FLASK_COLORS.length;
   masterDishes.push({
     id: newId,
-    name: `New Recipe #${newId}`,
+    name: `New Recipe`,
     colorIdx: nextColor,
     brattCapacity: 100,
     mainGastroYield: 35,
@@ -339,8 +428,14 @@ function addMasterDish() {
 
 function deleteMasterDish(idx) {
   if (confirm(`Are you sure you want to delete "${masterDishes[idx].name}"?`)) {
+    const deletedId = masterDishes[idx].id;
     masterDishes.splice(idx, 1);
     dailyFlasksNeeded.splice(idx, 1);
+    
+    // Clean it out of our daily memory if it was checked
+    todaySelectedIds = todaySelectedIds.filter(id => id !== deletedId);
+    localStorage.setItem('bratt_today_selected_ids', JSON.stringify(todaySelectedIds));
+    
     renderMasterGrid();
   }
 }
@@ -348,30 +443,6 @@ function deleteMasterDish(idx) {
 function saveMasterDishes() {
   localStorage.setItem('bratt_master_dishes', JSON.stringify(masterDishes));
   alert('Master Recipes Saved Successfully!');
-}
-
-function renderDailyInputs() {
-  const container = document.getElementById('daily-inputs');
-  container.innerHTML = '';
-
-  masterDishes.forEach((dish, idx) => {
-    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
-    const box = document.createElement('div');
-    box.style.background = '#0f172a';
-    box.style.padding = '12px';
-    box.style.borderRadius = '8px';
-    box.style.borderLeft = `6px solid ${col.hex}`;
-    
-    box.innerHTML = `
-      <div style="font-weight:bold; margin-bottom:4px; color:#fff;">${dish.name}</div>
-      <div style="font-size:0.8rem; color:${col.hex}; margin-bottom:8px; font-weight:bold;">🏷️ ${col.name}</div>
-      <div class="form-group">
-        <label>Flasks Required Today</label>
-        <input type="number" value="${dailyFlasksNeeded[idx] || 0}" min="0" oninput="dailyFlasksNeeded[${idx}] = parseFloat(this.value)||0">
-      </div>
-    `;
-    container.appendChild(box);
-  });
 }
 
 function parseIngredients(text) {
@@ -394,8 +465,12 @@ function calculateSchedule() {
   let worked = false;
 
   masterDishes.forEach((dish, idx) => {
+    // Only calculate for checked dishes
+    if (!todaySelectedIds.includes(dish.id)) return;
+    
     const flasksNeeded = dailyFlasksNeeded[idx] || 0;
     if (flasksNeeded <= 0) return;
+    
     worked = true;
 
     const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
@@ -453,7 +528,7 @@ function calculateSchedule() {
         <!-- STARCH SECTION -->
         <h3 style="color:#f59e0b;">🍚 STARCH</h3>
         <p style="font-size:0.88rem; color:#94a3b8; margin: 4px 0 10px 0;">
-          <strong>${flasksNeeded} Flasks</strong> = <strong>${starchGastrosNeeded.toFixed(1)} Gastro Trays</strong> (${dish.starchGastroYield} portions/gastro).<br>
+          <strong>${flasks developmentsNeeded} Flasks</strong> = <strong>${starchGastrosNeeded.toFixed(1)} Gastro Trays</strong> (${dish.starchGastroYield} portions/gastro).<br>
           Cook in <strong>${starchBrattPansNeeded} Batch(es)</strong> equalized at <strong style="color:#10b981">${starchFillPercent}% capacity</strong> (${starchGastrosPerPan} Gastros per batch).
         </p>
         <div class="pan-grid">
@@ -466,7 +541,7 @@ function calculateSchedule() {
   });
 
   if (!worked) {
-    container.innerHTML += '<p style="color:#94a3b8;">No flasks entered for today! Type a number in the boxes above and hit Calculate.</p>';
+    container.innerHTML += '<p style="color:#94a3b8;">No flasks entered for today! Make sure you selected your dishes and entered a number.</p>';
   }
 }
 
@@ -493,6 +568,8 @@ function renderPanBoxes(pans, fillPercent, gastrosPerPan, ingredients, colHex) {
   return html;
 }
 
+// Initialize Daily View on Load
+renderDailyMenuSelector();
 renderDailyInputs();
 </script>
 </body>
