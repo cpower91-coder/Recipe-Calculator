@@ -253,7 +253,7 @@ let defaultDishes = [
 let masterDishes = JSON.parse(localStorage.getItem('bratt_master_dishes')) || defaultDishes;
 let dailyFlasksNeeded = masterDishes.map(() => 0);
 
-// Tracks which dishes are checked for today's menu (defaults to all if first time loading)
+// Tracks which dishes are checked for today's menu
 let todaySelectedIds = JSON.parse(localStorage.getItem('bratt_today_selected_ids')) || masterDishes.map(d => d.id);
 
 function switchTab(tab) {
@@ -272,7 +272,6 @@ function switchTab(tab) {
   }
 }
 
-// Renders the checkboxes at the top of the daily tab
 function renderDailyMenuSelector() {
   const container = document.getElementById('daily-menu-selector');
   container.innerHTML = '';
@@ -298,11 +297,9 @@ function renderDailyMenuSelector() {
       if (e.target.checked) {
         todaySelectedIds.push(dish.id);
       } else {
-        // Remove from selected array and reset its flask count to 0
         todaySelectedIds = todaySelectedIds.filter(id => id !== dish.id);
         dailyFlasksNeeded[idx] = 0; 
       }
-      // Save selection memory
       localStorage.setItem('bratt_today_selected_ids', JSON.stringify(todaySelectedIds));
       renderDailyInputs();
     };
@@ -313,7 +310,6 @@ function renderDailyMenuSelector() {
   });
 }
 
-// Renders only the input boxes for dishes that are checked
 function renderDailyInputs() {
   const container = document.getElementById('daily-inputs');
   container.innerHTML = '';
@@ -321,7 +317,6 @@ function renderDailyInputs() {
   let hasSelected = false;
 
   masterDishes.forEach((dish, idx) => {
-    // Skip if not checked
     if (!todaySelectedIds.includes(dish.id)) return;
     
     hasSelected = true;
@@ -410,7 +405,7 @@ function renderMasterGrid() {
 }
 
 function addMasterDish() {
-  const newId = Date.now(); // guarantees a unique ID
+  const newId = Date.now();
   const nextColor = (masterDishes.length) % FLASK_COLORS.length;
   masterDishes.push({
     id: newId,
@@ -432,7 +427,6 @@ function deleteMasterDish(idx) {
     masterDishes.splice(idx, 1);
     dailyFlasksNeeded.splice(idx, 1);
     
-    // Clean it out of our daily memory if it was checked
     todaySelectedIds = todaySelectedIds.filter(id => id !== deletedId);
     localStorage.setItem('bratt_today_selected_ids', JSON.stringify(todaySelectedIds));
     
@@ -465,7 +459,6 @@ function calculateSchedule() {
   let worked = false;
 
   masterDishes.forEach((dish, idx) => {
-    // Only calculate for checked dishes
     if (!todaySelectedIds.includes(dish.id)) return;
     
     const flasksNeeded = dailyFlasksNeeded[idx] || 0;
@@ -528,7 +521,7 @@ function calculateSchedule() {
         <!-- STARCH SECTION -->
         <h3 style="color:#f59e0b;">🍚 STARCH</h3>
         <p style="font-size:0.88rem; color:#94a3b8; margin: 4px 0 10px 0;">
-          <strong>${flasks developmentsNeeded} Flasks</strong> = <strong>${starchGastrosNeeded.toFixed(1)} Gastro Trays</strong> (${dish.starchGastroYield} portions/gastro).<br>
+          <strong>${flasksNeeded} Flasks</strong> = <strong>${starchGastrosNeeded.toFixed(1)} Gastro Trays</strong> (${dish.starchGastroYield} portions/gastro).<br>
           Cook in <strong>${starchBrattPansNeeded} Batch(es)</strong> equalized at <strong style="color:#10b981">${starchFillPercent}% capacity</strong> (${starchGastrosPerPan} Gastros per batch).
         </p>
         <div class="pan-grid">
