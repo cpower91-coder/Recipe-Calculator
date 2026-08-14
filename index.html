@@ -1,495 +1,256 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kitchen Batch & Flask Calculator</title>
-<style>
-  :root {
-    --bg: #0f172a;
-    --card-bg: #1e293b;
-    --card-border: #334155;
-    --text-main: #f8fafc;
-    --text-muted: #94a3b8;
-    --accent: #38bdf8;
-    --accent-hover: #0284c7;
-    --success: #10b981;
-    --danger: #ef4444;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bratt Pan Batch & Time Calculator</title>
+  <style>
+    :root {
+      --primary: #1e3a8a;
+      --primary-hover: #1e40af;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --border: #cbd5e1;
+    }
 
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
 
-  body {
-    background-color: var(--bg);
-    color: var(--text-main);
-    padding: 16px;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding-bottom: 60px;
-  }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
 
-  header {
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 16px;
-    background: var(--card-bg);
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-  }
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
 
-  h1 { font-size: 1.5rem; color: #38bdf8; margin-bottom: 4px; }
-  p.subtitle { color: var(--text-muted); font-size: 0.85rem; }
+    header h1 {
+      color: var(--primary);
+      font-size: 1.8rem;
+    }
 
-  .tabs {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
+    .card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--border);
+    }
 
-  .tab-btn {
-    flex: 1;
-    padding: 12px;
-    background: #1e293b;
-    color: #94a3b8;
-    border: 1px solid var(--card-border);
-    border-radius: 8px;
-    font-weight: bold;
-    font-size: 1rem;
-    cursor: pointer;
-    text-align: center;
-  }
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 16px;
+      color: var(--primary);
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+    }
 
-  .tab-btn.active {
-    background: var(--accent);
-    color: #0f172a;
-    border-color: var(--accent);
-  }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
 
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+    }
 
-  .dish-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 16px;
-  }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-  .dish-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    border: 2px solid var(--card-border);
-    overflow: hidden;
-  }
+    label {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
 
-  .dish-card-header {
-    padding: 12px 16px;
-    color: #fff;
-    font-weight: bold;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 1.1rem;
-  }
+    input {
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
 
-  .flask-badge {
-    background: rgba(0,0,0,0.4);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    border: 1px solid rgba(255,255,255,0.3);
-  }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+    }
 
-  .dish-body { padding: 16px; }
+    button:hover {
+      background: var(--primary-hover);
+    }
 
-  .form-group { margin-bottom: 12px; }
-  label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-  input[type="text"], input[type="number"], select, textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--card-border);
-    background: #0f172a;
-    color: #fff;
-    font-size: 0.95rem;
-  }
-  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
 
-  .comp-box {
-    background: #0f172a;
-    padding: 12px;
-    border-radius: 8px;
-    margin-top: 10px;
-    border-left: 4px solid var(--accent);
-  }
-  .comp-box.starch { border-left-color: #f59e0b; }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
 
-  .btn {
-    background: var(--accent);
-    color: #0f172a;
-    font-weight: bold;
-    border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1rem;
-    width: 100%;
-    margin-top: 15px;
-  }
+    th {
+      background-color: #f1f5f9;
+      color: var(--primary);
+      font-weight: 700;
+    }
 
-  .btn-danger {
-    background: var(--danger);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 0.8rem;
-  }
+    .highlight-row {
+      font-weight: 700;
+      font-size: 1.1rem;
+      background-color: #eff6ff;
+    }
 
-  /* FLASK COLOUR STYLES */
-  .color-blue { background-color: #2563eb; border-color: #2563eb; }
-  .color-red { background-color: #dc2626; border-color: #dc2626; }
-  .color-orange { background-color: #ea580c; border-color: #ea580c; }
-  .color-yellow { background-color: #d97706; border-color: #d97706; }
-  .color-green { background-color: #16a34a; border-color: #16a34a; }
-  .color-pink { background-color: #db2777; border-color: #db2777; }
+    /* Print-Friendly Rules */
+    @media print {
+      button, 
+      .no-print, 
+      .input-card {
+        display: none !important;
+      }
 
-  .result-card {
-    background: var(--card-bg);
-    border-radius: 12px;
-    border: 1px solid var(--card-border);
-    margin-bottom: 20px;
-    overflow: hidden;
-  }
-  .result-header { padding: 12px 16px; font-weight: bold; color: white; display: flex; justify-content: space-between; }
-  .result-body { padding: 16px; }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0;
+        margin: 0;
+      }
 
-  .pan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 10px; }
-  .pan-box { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; }
+      .card {
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        padding: 12px !important;
+        margin-bottom: 12px !important;
+      }
 
-  .progress-bg { background: #334155; height: 10px; border-radius: 5px; overflow: hidden; margin: 6px 0; }
-  .progress-fill { height: 100%; background: var(--accent); }
-
-  .ing-list { font-size: 0.85rem; color: var(--text-muted); margin-top: 6px; border-top: 1px solid #334155; padding-top: 6px; }
-  .ing-list li { display: flex; justify-content: space-between; margin-bottom: 3px; }
-
-  @media print {
-    .tabs, .btn, button { display: none !important; }
-    body { background: white; color: black; }
-    .result-card { border: 1px solid #ccc; background: white; color: black; page-break-inside: avoid; }
-    .pan-box { border: 1px solid #aaa; background: #fff; color: #000; }
-    .ing-list { color: #000; }
-  }
-</style>
+      th {
+        background-color: #e2e8f0 !important;
+        color: #000 !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-<header>
-  <h1>🍳 Kitchen Batch & Flask Calculator</h1>
-  <p class="subtitle">Reverse-Engineer Daily Flask Orders ➔ Gastros ➔ Equalized Bratt Pans</p>
-</header>
+  <header>
+    <h1>Bratt Pan Production Calculator</h1>
+  </header>
 
-<div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('daily')">📅 Daily Production Orders</button>
-  <button class="tab-btn" onclick="switchTab('master')">⚙️ Master Dish Library</button>
-</div>
-
-<!-- TAB 1: DAILY ORDERS -->
-<div id="tab-daily" class="tab-content active">
-  <div style="background:#1e293b; padding:16px; border-radius:12px; border:1px solid #334155; margin-bottom:20px;">
-    <h3 style="color:#38bdf8; margin-bottom:12px;">Enter Today's Flask Orders</h3>
-    <div id="daily-inputs" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;"></div>
-    <button class="btn" style="background:#10b981; color:white;" onclick="calculateSchedule()">⚡ Calculate Daily Cook & Prep Plan</button>
+  <!-- Input Form -->
+  <div class="card input-card">
+    <h2>Batch Settings</h2>
+    <form id="calc-form">
+      <div class="grid">
+        <div class="field">
+          <label for="pan-capacity">Bratt Pan Max Working Capacity (Liters)</label>
+          <input type="number" id="pan-capacity" value="80" min="1" step="0.5" required />
+        </div>
+        <div class="field">
+          <label for="total-volume">Total Batch Volume Needed (Liters)</label>
+          <input type="number" id="total-volume" value="250" min="1" step="0.5" required />
+        </div>
+        <div class="field">
+          <label for="cook-time">Cook Time Per Batch (Minutes)</label>
+          <input type="number" id="cook-time" value="45" min="1" step="1" required />
+        </div>
+        <div class="field">
+          <label for="turnaround-time">Turnaround / Washout Time (Minutes)</label>
+          <input type="number" id="turnaround-time" value="15" min="0" step="1" required />
+        </div>
+      </div>
+      <button type="submit">Calculate Production Run</button>
+    </form>
   </div>
 
-  <div id="results-container"></div>
-</div>
-
-<!-- TAB 2: MASTER DISH LIBRARY -->
-<div id="tab-master" class="tab-content">
-  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-    <h2>Master Dishes (Recipe Library)</h2>
-    <div style="display:flex; gap:10px;">
-      <button style="background:#38bdf8; color:#0f172a; border:none; padding:10px 16px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="addMasterDish()">➕ Add New Recipe</button>
-      <button style="background:#10b981; color:white; border:none; padding:10px 16px; border-radius:6px; font-weight:bold; cursor:pointer;" onclick="saveMasterDishes()">💾 Save All Recipes</button>
-    </div>
+  <!-- Output Results Card -->
+  <div class="card">
+    <h2>Production Plan & Schedule</h2>
+    <table>
+      <tbody>
+        <tr>
+          <th>Required Batches:</th>
+          <td id="res-batches">-</td>
+        </tr>
+        <tr>
+          <th>Volume Per Batch:</th>
+          <td id="res-batch-vol">-</td>
+        </tr>
+        <tr>
+          <th>Time Per Batch (Cook + Turnaround):</th>
+          <td id="res-single-time">-</td>
+        </tr>
+        <tr class="highlight-row">
+          <th>Total Production Time:</th>
+          <td id="res-total-time">-</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
-  <div id="master-grid" class="dish-grid"></div>
-</div>
 
-<script>
-const FLASK_COLORS = [
-  { name: "Blue Flask", class: "color-blue", hex: "#2563eb" },
-  { name: "Red Flask", class: "color-red", hex: "#dc2626" },
-  { name: "Orange Flask", class: "color-orange", hex: "#ea580c" },
-  { name: "Yellow Flask", class: "color-yellow", hex: "#d97706" },
-  { name: "Green Flask", class: "color-green", hex: "#16a34a" },
-  { name: "Pink Flask", class: "color-pink", hex: "#db2777" }
-];
+  <button class="no-print" onclick="window.print()" style="background: #334155;">🖨️ Print Batch Sheet</button>
 
-let defaultDishes = [
-  { id: 1, name: "Beef Stroganoff & Rice", colorIdx: 0, brattCapacity: 120, mainGastroYield: 40, starchGastroYield: 50, mainIng: "Beef: 12kg\nStock: 8L\nCream: 2L", starchIng: "Rice: 8kg\nWater: 12L" },
-  { id: 2, name: "Chicken Curry & Mash", colorIdx: 1, brattCapacity: 100, mainGastroYield: 35, starchGastroYield: 40, mainIng: "Chicken: 10kg\nCurry Sauce: 10L", starchIng: "Potatoes: 15kg\nButter: 1kg" },
-  { id: 3, name: "Chili Con Carne & Rice", colorIdx: 2, brattCapacity: 130, mainGastroYield: 45, starchGastroYield: 50, mainIng: "Mince: 15kg\nBeans: 5kg\nTomatoes: 10L", starchIng: "Rice: 8kg\nWater: 12L" },
-  { id: 4, name: "Shepherd's Pie & Veg", colorIdx: 3, brattCapacity: 90, mainGastroYield: 30, starchGastroYield: 40, mainIng: "Lamb Mince: 12kg\nGravy: 6L", starchIng: "Carrots: 8kg\nPeas: 5kg" },
-  { id: 5, name: "Pasta Bake & Garlic Bread", colorIdx: 4, brattCapacity: 110, mainGastroYield: 40, starchGastroYield: 30, mainIng: "Pasta: 10kg\nTomato Sauce: 12L\nCheese: 3kg", starchIng: "Garlic Bread: 40 pcs" },
-  { id: 6, name: "Turkey Stew & Roasties", colorIdx: 5, brattCapacity: 100, mainGastroYield: 35, starchGastroYield: 35, mainIng: "Turkey: 12kg\nStock: 10L\nVeg: 5kg", starchIng: "Potatoes: 18kg\nOil: 2L" }
-];
+  <script>
+    const form = document.getElementById('calc-form');
 
-let masterDishes = JSON.parse(localStorage.getItem('bratt_master_dishes')) || defaultDishes;
-let dailyFlasksNeeded = masterDishes.map(() => 0);
+    function calculate() {
+      const panCap = parseFloat(document.getElementById('pan-capacity').value) || 0;
+      const totalVol = parseFloat(document.getElementById('total-volume').value) || 0;
+      const cookTime = parseFloat(document.getElementById('cook-time').value) || 0;
+      const turnTime = parseFloat(document.getElementById('turnaround-time').value) || 0;
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-  
-  if (tab === 'daily') {
-    document.querySelectorAll('.tab-btn')[0].classList.add('active');
-    document.getElementById('tab-daily').classList.add('active');
-    renderDailyInputs();
-  } else {
-    document.querySelectorAll('.tab-btn')[1].classList.add('active');
-    document.getElementById('tab-master').classList.add('active');
-    renderMasterGrid();
-  }
-}
+      if (panCap <= 0 || totalVol <= 0) return;
 
-function renderMasterGrid() {
-  const container = document.getElementById('master-grid');
-  container.innerHTML = '';
+      // Calculate number of full/partial batches
+      const numBatches = Math.ceil(totalVol / panCap);
+      const avgBatchVol = (totalVol / numBatches).toFixed(1);
 
-  masterDishes.forEach((dish, idx) => {
-    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
-    const card = document.createElement('div');
-    card.className = 'dish-card';
-    card.innerHTML = `
-      <div class="dish-card-header ${col.class}">
-        <span>Dish #${idx + 1} Recipe</span>
-        <div style="display:flex; align-items:center; gap:8px;">
-          <span class="flask-badge">${col.name}</span>
-          ${masterDishes.length > 1 ? `<button class="btn-danger" onclick="deleteMasterDish(${idx})">🗑️ Delete</button>` : ''}
-        </div>
-      </div>
-      <div class="dish-body">
-        <div class="form-group">
-          <label>Dish Name</label>
-          <input type="text" value="${dish.name}" oninput="masterDishes[${idx}].name = this.value">
-        </div>
-        <div class="form-group">
-          <label>Flask / Color Tag</label>
-          <select onchange="masterDishes[${idx}].colorIdx = parseInt(this.value); renderMasterGrid();">
-            ${FLASK_COLORS.map((c, i) => `<option value="${i}" ${i === dish.colorIdx ? 'selected' : ''}>${c.name}</option>`).join('')}
-          </select>
-        </div>
-        <div class="form-group">
-          <label>1 Bratt Pan Total Capacity (Portions/Flasks)</label>
-          <input type="number" value="${dish.brattCapacity}" oninput="masterDishes[${idx}].brattCapacity = parseFloat(this.value)||1">
-        </div>
+      // Time calculations
+      const singleCycleTime = cookTime + turnTime;
+      // Total time = (all cook times) + (turnaround times between batches, assuming no final turnaround needed)
+      const totalMinutes = (numBatches * cookTime) + ((numBatches - 1) * turnTime);
 
-        <div class="comp-box">
-          <label style="color:#38bdf8;">🥘 MAIN COMPONENT</label>
-          <div class="form-group" style="margin-top:6px;">
-            <label>Portions Made per 1 Gastro Tray</label>
-            <input type="number" value="${dish.mainGastroYield}" oninput="masterDishes[${idx}].mainGastroYield = parseFloat(this.value)||1">
-          </div>
-          <div class="form-group">
-            <label>Base Main Recipe per 1 Full Gastro (Ingredient: Qty)</label>
-            <textarea rows="3" oninput="masterDishes[${idx}].mainIng = this.value">${dish.mainIng}</textarea>
-          </div>
-        </div>
+      const hours = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+      const timeFormatted = hours > 0 ? `${hours}h ${mins}m` : `${mins} mins`;
 
-        <div class="comp-box starch">
-          <label style="color:#f59e0b;">🍚 STARCH COMPONENT</label>
-          <div class="form-group" style="margin-top:6px;">
-            <label>Portions Made per 1 Gastro Tray</label>
-            <input type="number" value="${dish.starchGastroYield}" oninput="masterDishes[${idx}].starchGastroYield = parseFloat(this.value)||1">
-          </div>
-          <div class="form-group">
-            <label>Base Starch Recipe per 1 Full Gastro (Ingredient: Qty)</label>
-            <textarea rows="3" oninput="masterDishes[${idx}].starchIng = this.value">${dish.starchIng}</textarea>
-          </div>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function addMasterDish() {
-  const newId = masterDishes.length + 1;
-  const nextColor = (masterDishes.length) % FLASK_COLORS.length;
-  masterDishes.push({
-    id: newId,
-    name: `New Recipe #${newId}`,
-    colorIdx: nextColor,
-    brattCapacity: 100,
-    mainGastroYield: 35,
-    starchGastroYield: 40,
-    mainIng: "Ingredient A: 10kg\nIngredient B: 5L",
-    starchIng: "Starch A: 8kg\nWater: 12L"
-  });
-  dailyFlasksNeeded.push(0);
-  renderMasterGrid();
-}
-
-function deleteMasterDish(idx) {
-  if (confirm(`Are you sure you want to delete "${masterDishes[idx].name}"?`)) {
-    masterDishes.splice(idx, 1);
-    dailyFlasksNeeded.splice(idx, 1);
-    renderMasterGrid();
-  }
-}
-
-function saveMasterDishes() {
-  localStorage.setItem('bratt_master_dishes', JSON.stringify(masterDishes));
-  alert('Master Recipes Saved Successfully!');
-}
-
-function renderDailyInputs() {
-  const container = document.getElementById('daily-inputs');
-  container.innerHTML = '';
-
-  masterDishes.forEach((dish, idx) => {
-    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
-    const box = document.createElement('div');
-    box.style.background = '#0f172a';
-    box.style.padding = '12px';
-    box.style.borderRadius = '8px';
-    box.style.borderLeft = `6px solid ${col.hex}`;
-    
-    box.innerHTML = `
-      <div style="font-weight:bold; margin-bottom:4px; color:#fff;">${dish.name}</div>
-      <div style="font-size:0.8rem; color:${col.hex}; margin-bottom:8px; font-weight:bold;">🏷️ ${col.name}</div>
-      <div class="form-group">
-        <label>Flasks Required Today</label>
-        <input type="number" value="${dailyFlasksNeeded[idx] || 0}" min="0" oninput="dailyFlasksNeeded[${idx}] = parseFloat(this.value)||0">
-      </div>
-    `;
-    container.appendChild(box);
-  });
-}
-
-function parseIngredients(text) {
-  if (!text) return [];
-  return text.split('\n').map(line => {
-    const parts = line.split(':');
-    if (parts.length === 2) {
-      const name = parts[0].trim();
-      const match = parts[1].trim().match(/^([\d\.]+)\s*(.*)$/);
-      if (match) return { name, amount: parseFloat(match[1]), unit: match[2] };
+      // Display results
+      document.getElementById('res-batches').textContent = `${numBatches} batch${numBatches > 1 ? 'es' : ''}`;
+      document.getElementById('res-batch-vol').textContent = `~${avgBatchVol} Liters / batch`;
+      document.getElementById('res-single-time').textContent = `${singleCycleTime} mins (${cookTime}m cook + ${turnTime}m clean/fill)`;
+      document.getElementById('res-total-time').textContent = `${timeFormatted} (${totalMinutes} mins total)`;
     }
-    return null;
-  }).filter(Boolean);
-}
 
-function calculateSchedule() {
-  const container = document.getElementById('results-container');
-  container.innerHTML = '<h2 style="margin-bottom:16px; color:#38bdf8;">📋 Daily Kitchen Cooking & Prep Plan</h2>';
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      calculate();
+    });
 
-  let worked = false;
-
-  masterDishes.forEach((dish, idx) => {
-    const flasksNeeded = dailyFlasksNeeded[idx] || 0;
-    if (flasksNeeded <= 0) return;
-    worked = true;
-
-    const col = FLASK_COLORS[dish.colorIdx % FLASK_COLORS.length];
-    const totalPortions = flasksNeeded;
-
-    // Main Calculations
-    const mainGastrosNeeded = totalPortions / dish.mainGastroYield;
-    const mainBrattPansNeeded = Math.ceil(totalPortions / dish.brattCapacity);
-    const mainFillPercent = ((totalPortions / (mainBrattPansNeeded * dish.brattCapacity)) * 100).toFixed(1);
-    const mainPortionsPerPan = totalPortions / mainBrattPansNeeded;
-    const mainGastrosPerPan = (mainPortionsPerPan / dish.mainGastroYield).toFixed(1);
-
-    const baseMainIngs = parseIngredients(dish.mainIng);
-    const scaledMainIngs = baseMainIngs.map(ing => ({
-      name: ing.name,
-      perPan: (ing.amount * (mainPortionsPerPan / dish.mainGastroYield)).toFixed(2),
-      unit: ing.unit
-    }));
-
-    // Starch Calculations
-    const starchGastrosNeeded = totalPortions / dish.starchGastroYield;
-    const starchBrattPansNeeded = Math.ceil(totalPortions / dish.brattCapacity);
-    const starchFillPercent = ((totalPortions / (starchBrattPansNeeded * dish.brattCapacity)) * 100).toFixed(1);
-    const starchPortionsPerPan = totalPortions / starchBrattPansNeeded;
-    const starchGastrosPerPan = (starchPortionsPerPan / dish.starchGastroYield).toFixed(1);
-
-    const baseStarchIngs = parseIngredients(dish.starchIng);
-    const scaledStarchIngs = baseStarchIngs.map(ing => ({
-      name: ing.name,
-      perPan: (ing.amount * (starchPortionsPerPan / dish.starchGastroYield)).toFixed(2),
-      unit: ing.unit
-    }));
-
-    const card = document.createElement('div');
-    card.className = 'result-card';
-    card.innerHTML = `
-      <div class="result-header ${col.class}">
-        <span>${dish.name}</span>
-        <span>🏷️ ${col.name} | Total Flasks: ${flasksNeeded}</span>
-      </div>
-      <div class="result-body">
-        
-        <!-- MAIN SECTION -->
-        <h3 style="color:#38bdf8;">🥘 MAIN: ${dish.name}</h3>
-        <p style="font-size:0.88rem; color:#94a3b8; margin: 4px 0 10px 0;">
-          <strong>${flasksNeeded} Flasks</strong> = <strong>${mainGastrosNeeded.toFixed(1)} Gastro Trays</strong> (${dish.mainGastroYield} portions/gastro).<br>
-          Cook in <strong>${mainBrattPansNeeded} Bratt Pan(s)</strong> equalized at <strong style="color:#10b981">${mainFillPercent}% capacity</strong> (${mainGastrosPerPan} Gastros per pan).
-        </p>
-        <div class="pan-grid">
-          ${renderPanBoxes(mainBrattPansNeeded, mainFillPercent, mainGastrosPerPan, scaledMainIngs, col.hex)}
-        </div>
-
-        <hr style="border:0; border-top:1px solid #334155; margin:16px 0;">
-
-        <!-- STARCH SECTION -->
-        <h3 style="color:#f59e0b;">🍚 STARCH</h3>
-        <p style="font-size:0.88rem; color:#94a3b8; margin: 4px 0 10px 0;">
-          <strong>${flasksNeeded} Flasks</strong> = <strong>${starchGastrosNeeded.toFixed(1)} Gastro Trays</strong> (${dish.starchGastroYield} portions/gastro).<br>
-          Cook in <strong>${starchBrattPansNeeded} Batch(es)</strong> equalized at <strong style="color:#10b981">${starchFillPercent}% capacity</strong> (${starchGastrosPerPan} Gastros per batch).
-        </p>
-        <div class="pan-grid">
-          ${renderPanBoxes(starchBrattPansNeeded, starchFillPercent, starchGastrosPerPan, scaledStarchIngs, "#f59e0b")}
-        </div>
-
-      </div>
-    `;
-    container.appendChild(card);
-  });
-
-  if (!worked) {
-    container.innerHTML += '<p style="color:#94a3b8;">No flasks entered for today! Type a number in the boxes above and hit Calculate.</p>';
-  }
-}
-
-function renderPanBoxes(pans, fillPercent, gastrosPerPan, ingredients, colHex) {
-  let html = '';
-  for (let i = 1; i <= pans; i++) {
-    html += `
-      <div class="pan-box">
-        <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:0.88rem;">
-          <span>Pan #${i} of ${pans}</span>
-          <span style="color:${colHex};">${fillPercent}% Load</span>
-        </div>
-        <div class="progress-bg"><div class="progress-fill" style="width:${fillPercent}%; background:${colHex};"></div></div>
-        <div style="font-size:0.8rem; color:#94a3b8; margin-bottom:6px;">Yields: <strong>${gastrosPerPan} Gastros</strong></div>
-        <div class="ing-list">
-          <div style="font-weight:bold; color:#fff; margin-bottom:4px;">Put into this pan:</div>
-          <ul>
-            ${ingredients.length > 0 ? ingredients.map(ing => `<li><span>${ing.name}</span> <strong>${ing.perPan} ${ing.unit}</strong></li>`).join('') : '<li>No ingredients listed</li>'}
-          </ul>
-        </div>
-      </div>
-    `;
-  }
-  return html;
-}
-
-renderDailyInputs();
-</script>
+    // Run initial calculation on page load
+    calculate();
+  </script>
 </body>
 </html>
